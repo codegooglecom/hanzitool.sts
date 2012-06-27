@@ -95,7 +95,7 @@ function convert(){
     showProgressBar();
     (function(){
         var t = new Date();
-        for (;i<I;++i) {
+        while (i<I) {
             for (j=listMaxLen;j>=1;--j) {
                 s = str.substr(i, j);
                 if (list[s]) {
@@ -106,13 +106,13 @@ function convert(){
             }
             output.push(s);
             updateProgressBar(['文本轉換中... ', parseInt(100*i/I), '%'].join(''), (100*i/I));
+            ++i;
             if (new Date()-t>500) {
-                ++i;
                 var k = setTimeout(arguments.callee,0);
                 return;
             }
         }
-        setTimeout(finish,0);
+        finish();
     })();
     
     function finish() {
