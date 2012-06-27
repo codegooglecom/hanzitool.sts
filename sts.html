@@ -70,26 +70,25 @@ function init(){
 }
 
 // 主要轉換函數
-function convert(f){
+function convert(){
     var time = new Date();
     if (stat == 'working') return;
     stat = 'working';
     $("view").style.display = "none";
     // 設定參數
     // == method
-    var method = parseInt(f.method.value);
+    var method = parseInt($('method').value);
     if (method==0) { list = s2t; _list = _s2t; }
     else { list = t2s; _list = _t2s; }
     // == mode
-    var mode = parseInt(f.mode.value);
-    var conv = [conv0,conv1,conv2,conv3]; conv = conv[mode];
+    var conv = [conv0,conv1,conv2,conv3][parseInt($('mode').value)];
     // == outmode
-    var outmode = parseInt(f.outmode.value);
+    var outmode = parseInt($('outmode').value);
     // == 其他
     multiIdx = 0;
     // 開始轉換
     // 輸入 str; 輸出 output
-    var str = f.input.value.escapeHTML(); // 輸入文字
+    var str = $('input').value.escapeHTML(); // 輸入文字
     var output = [];
     var i=0, I=str.length;
     var s, j;
@@ -617,31 +616,31 @@ b:focus {
 <div id="debug"></div>
 <div id="progress" style="display:none;"><div id="progresstext">處理中，請稍候…</div><div id="progressbar"></div></div>
 <div id="view" style="display:none;"></div>
-<form action="javascript:" onsubmit="convert(this);">
+<form action="javascript:" onsubmit="convert();">
     <p>
-        <select name="method" size="1">
+        <select id="method" size="1">
             <option value="0">簡->繁</option>
             <option value="1">繁->簡</option>
         </select>
-        <select name="mode" size="1">
+        <select id="mode" size="1">
             <option value="0">校對模式(含單選)</option>
             <option value="1" selected="selected">校對模式</option>
             <option value="2">純文字模式(含單選)</option>
             <option value="3">純文字模式</option>
         </select>
-        <select name="outmode" size="1">
+        <select id="outmode" size="1">
             <option value="0">格式化輸出</option>
             <option value="1">純文字輸出</option>
         </select>
     </p>
     <p>
-        <textarea name="input" cols="60" rows="10"></textarea>
+        <textarea id="input" cols="60" rows="10"></textarea>
     </p>
     <p>
-        <input type="submit" name="conversion" value="轉換" />
-        <input type="button" name="done" value="完成" onclick="confirmResult()" />
-        <input type="button" name="relist" value="重設轉換表" onclick="resetList()" />
-        <input type="button" name="relist" value="顯示說明" onclick="switchHelper(this)" />
+        <input type="submit" value="轉換" />
+        <input type="button" value="完成" onclick="confirmResult()" />
+        <input type="button" value="重設轉換表" onclick="resetList()" />
+        <input type="button" value="顯示說明" onclick="switchHelper(this)" />
     </p>
 </form>
 <div id="helper" style="display:none;">
