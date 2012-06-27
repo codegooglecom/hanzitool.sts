@@ -105,7 +105,7 @@ function convert(){
                 }
             }
             output.push(s);
-            updateProgressBar(i,I);
+            updateProgressBar(['文本轉換中... ', parseInt(100*i/I), '%'].join(''), (100*i/I));
             if (new Date()-t>500) {
                 ++i;
                 var k = setTimeout(arguments.callee,0);
@@ -410,8 +410,9 @@ function showProgressBar() {
     $('progress').style.display = 'block';
 }
 
-function updateProgressBar(value, total) {
-    $('progressbar').style.width = (100 * value / total) + "%";
+function updateProgressBar(txt, progress) {
+    $('progresstext').innerHTML = txt;
+    $('progressbar').style.width = progress + "%";
 }
 
 function hideProgressBar() {
@@ -611,7 +612,7 @@ b:focus {
 
 <body onload="init();">
 <div id="debug"></div>
-<div id="progress" style="display:none;"><div id="progresstext">處理中，請稍候…</div><div id="progressbar"></div></div>
+<div id="progress" style="display:none;"><div id="progresstext"></div><div id="progressbar"></div></div>
 <div id="view" style="display:none;"></div>
 <form action="javascript:" onsubmit="convert();">
     <p>
