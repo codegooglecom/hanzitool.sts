@@ -128,38 +128,31 @@ function convert(){
     }
 
     function conv0() {
-        var candidates = list[s];
-        var cur = 0;
-        var cls = (candidates.length>1) ? '未選字' : '唯一字';
-        s = '<b class="'+cls+'" id="char'+multiIdx+'" char="'+s+'" cur="'+cur+'" onkeydown="return choose(event,this);" onfocus="markFocus(this);" onblur="markBlur(this);" '+'tabindex="'+(multiIdx+1)+'">'+candidates[cur]+'</b>';
+        s = ['<b class="',((list[s].length>1) ? '未選字' : '唯一字'),'" id="char',multiIdx,'" char="',s,'" cur="0" onkeydown="return choose(event,this);" onfocus="markFocus(this);" onblur="markBlur(this);" ','tabindex="',(multiIdx+1),'">',list[s][0],'</b>'].join('');
         ++multiIdx;
     }
 
     function conv1() {
-        var candidates = list[s];
-        if (candidates.length==1) {
-            s = candidates[0];
+        if (list[s].length==1) {
+            s = list[s][0];
             return;
         }
-        var cur = 0;
-        var cls = '未選字';
-        s = '<b class="'+cls+'" id="char'+multiIdx+'" char="'+s+'" cur="'+cur+'" onkeydown="return choose(event,this);" onfocus="markFocus(this);" onblur="markBlur(this);" tabindex="'+(multiIdx+1)+'">'+candidates[cur]+'</b>';
+        s = ['<b class="未選字" id="char',multiIdx,'" char="',s,'" cur="0" onkeydown="return choose(event,this);" onfocus="markFocus(this);" onblur="markBlur(this);" tabindex="',(multiIdx+1),'">',list[s][0],'</b>'].join('');
         ++multiIdx;
     }
 
     function conv2() {
-        s = '<b class="上色字" contenteditable="true" tabindex="'+(multiIdx+1)+'">{{'+s+'->'+list[s].join('|')+'}}</b>';
+        s = ['<b class="上色字" contenteditable="true" tabindex="',(multiIdx+1),'">{{',s,'->',list[s].join('|'),'}}</b>'].join('');
         ++multiIdx;
     }
 
     function conv3() {
-        if (list[s].length>1) {
-            s = '<b class="上色字" contenteditable="true" tabindex="'+(multiIdx+1)+'">{{'+s+'->'+list[s].join('|')+'}}</b>';
-        ++multiIdx;
-        }
-        else {
+        if (list[s].length==1) {
             s = list[s][0];
+            return;
         }
+        s = ['<b class="上色字" contenteditable="true" tabindex="',(multiIdx+1),'">{{',s,'->',list[s].join('|'),'}}</b>'].join('');
+        ++multiIdx;
     }
 }
 
