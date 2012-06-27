@@ -314,7 +314,6 @@ function choose(evt,el){
         closePopup(el);
         ret = false;
     }
-    //evt.stopPropagation();
     return ret;
 }
 
@@ -435,7 +434,6 @@ function getChar(id) {
     return $("char"+id);
 }
 
-
 function setCandidate(el,index,alt) {
     //debug(alt);
     el.setAttribute('cur',index);
@@ -454,7 +452,6 @@ function setCandidate(el,index,alt) {
 
 function openPopup(el) {
     var pid = 'pop_' + el.id;
-//    if ($(pid)) return;
     // 設定內容
     var cand = [];
     var cands = list[el.getAttribute('char')];
