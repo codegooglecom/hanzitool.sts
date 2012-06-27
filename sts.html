@@ -1,0 +1,676 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!--
+    簡繁秘書 Simplotraditionl Secretary
+    
+    @Project Home   http://code.google.com/p/hanzitool/
+    @License        GNU GPL v3
+    @Author         Blankego(有女同車) <blankego(at)163.com>
+    @Author         Danny Lin <danny.0838(at)gmail.com>
+-->
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-tw" lang="zh-tw" dir="ltr">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>簡繁秘書 Simplotraditionl Secretary v1.1.2</title>
+<!--Load the conversion dictionary-->
+<script src="s2t.js" type="text/javascript"></script>
+<script src="s2tp.js" type="text/javascript"></script>
+<script src="t2s.js" type="text/javascript"></script>
+<script src="t2sp.js" type="text/javascript"></script>
+<script type="text/javascript">
+<!--
+/**
+ * main program
+ */
+
+// 初始化
+var list, _list, 
+    s2t = s2t||{}, _s2t = {}, s2tp = s2tp||{},
+    t2s = t2s||{}, _t2s = {}, t2sp = t2sp||{};
+
+var stat = 'resting';
+var listMaxLen = 1;
+var multiIdx = 0;
+
+function init(){
+    /**
+     * 分別處理二表，以 "":"" 卡位，使每行尾端皆帶有,
+     */
+    // 簡轉繁
+    delete(s2t[""]);
+    for (var i in s2t) {
+        listMaxLen = Math.max(listMaxLen,i.length);
+        s2t[i] = s2t[i].split(',');
+    }
+    delete(s2tp[""]);
+    for (var i in s2tp) {
+        listMaxLen = Math.max(listMaxLen,i.length);
+        s2tp[i] = s2tp[i].split(',');
+    }
+    var tmp = copyObject(s2tp);
+    for (var i in s2t) {
+        tmp[i] = s2t[i];
+    }
+    s2t = tmp;
+    // 繁轉簡
+    delete(t2s[""]);
+    for (var i in t2s) {
+        listMaxLen = Math.max(listMaxLen,i.length);
+        t2s[i] = t2s[i].split(',');
+    }
+    delete(t2sp[""]);
+    for (var i in t2sp) {
+        listMaxLen = Math.max(listMaxLen,i.length);
+        t2sp[i] = t2sp[i].split(',');
+    }
+    var tmp = copyObject(t2sp);
+    for (var i in t2s) {
+        tmp[i] = t2s[i];
+    }
+    t2s = tmp;
+}
+
+// 主要轉換函數
+function convert(){
+    var time = new Date();
+    if (stat == 'working') return;
+    stat = 'working';
+    $("view").style.display = "none";
+    // 設定參數
+    // == method
+    var method = parseInt($('method').value);
+    if (method==0) { list = s2t; _list = _s2t; }
+    else { list = t2s; _list = _t2s; }
+    // == mode
+    var conv = [conv0,conv1,conv2,conv3][parseInt($('mode').value)];
+    // == outmode
+    var outmode = parseInt($('outmode').value);
+    // == 其他
+    multiIdx = 0;
+    // 開始轉換
+    // 輸入 str; 輸出 output
+    var str = $('input').value.escapeHTML(); // 輸入文字
+    var output = [];
+    var i=0, I=str.length;
+    var s, j;
+    showProgressBar();
+    (function(){
+        var t = new Date();
+        for (;i<I;++i) {
+            for (j=listMaxLen;j>=1;--j) {
+                s = str.substr(i, j);
+                if (list[s]) {
+                    conv();
+                    i += j-1;
+                    break;
+                }
+            }
+            output.push(s);
+            updateProgressBar(i,I);
+            if (new Date()-t>500) {
+                ++i;
+                var k = setTimeout(arguments.callee,0);
+                return;
+            }
+        }
+        setTimeout(finish,0);
+    })();
+    
+    function finish() {
+        // 轉換完成
+        output = output.join('');
+        if (outmode==1) $("view").innerHTML = '<pre id="viewer" contenteditable="true">'+output.replace(/<.*?>/g,'')+'</pre>';
+        else $("view").innerHTML = '<pre id="viewer">'+output+'</pre>';
+        $("view").style.display = "";
+        hideProgressBar();
+        var el = getChar(0); if (el) el.focus();
+        stat = 'ready';
+        //debug((new Date()-time)+' ms');
+    }
+
+    function conv0() {
+        var candidates = list[s];
+        var cur = 0;
+        var cls = (candidates.length>1) ? '未選字' : '唯一字';
+        s = '<b class="'+cls+'" id="char'+multiIdx+'" char="'+s+'" cur="'+cur+'" onkeydown="return choose(event,this);" onfocus="markFocus(this);" onblur="markBlur(this);" '+'tabindex="'+(multiIdx+1)+'">'+candidates[cur]+'</b>';
+        ++multiIdx;
+    }
+
+    function conv1() {
+        var candidates = list[s];
+        if (candidates.length==1) {
+            s = candidates[0];
+            return;
+        }
+        var cur = 0;
+        var cls = '未選字';
+        s = '<b class="'+cls+'" id="char'+multiIdx+'" char="'+s+'" cur="'+cur+'" onkeydown="return choose(event,this);" onfocus="markFocus(this);" onblur="markBlur(this);" tabindex="'+(multiIdx+1)+'">'+candidates[cur]+'</b>';
+        ++multiIdx;
+    }
+
+    function conv2() {
+        s = '<b class="上色字" contenteditable="true" tabindex="'+(multiIdx+1)+'">{{'+s+'->'+list[s].join('|')+'}}</b>';
+        ++multiIdx;
+    }
+
+    function conv3() {
+        if (list[s].length>1) {
+            s = '<b class="上色字" contenteditable="true" tabindex="'+(multiIdx+1)+'">{{'+s+'->'+list[s].join('|')+'}}</b>';
+        ++multiIdx;
+        }
+        else {
+            s = list[s][0];
+        }
+    }
+}
+
+/**
+ * 操作函數
+ */
+function choose(evt,el){
+    //debug(evt.keyCode);
+    var ret = true;
+    // 設為可編輯
+    // Windows 上之 Safari 設定後無法輸入中文
+    if (evt.keyCode==192) { // `
+        if ( el.className == '編輯中' ) {
+            el.contentEditable = false;
+            el.className = '選定字';
+        }
+        else {
+            el.contentEditable = true;
+            el.className = '編輯中';
+            el.setAttribute('cur','-1');
+            el.focus();
+            selectText(el);
+        }
+        ret = false;
+    }
+    // 若為編輯模式，忽略其他特殊鍵
+    else if ( el.className == '編輯中' ) {
+    }
+    // 移向前或後一個非唯一字
+    else if ( evt.keyCode==65 || evt.keyCode==68) { // A, D
+        var i = getCharId(el), id = i, el;
+        var move = (evt.keyCode==65) ? getPrevCharId : getNextCharId;
+        while (true) {
+            id = move(id); el = getChar(id);
+            if (id==i) {
+                alert('找不到待校字！');
+                break;
+            }
+            else if (el.className!='唯一字') {
+                el.focus();
+                break;
+            }
+        }
+        ret = false;
+    }
+    // 移向前或後一個未選字
+    else if ( evt.keyCode==81 || evt.keyCode==69) { // Q, E
+        var i = getCharId(el), id = i, el;
+        var move = (evt.keyCode==81) ? getPrevCharId : getNextCharId;
+        while (true) {
+            id = move(id); el = getChar(id);
+            if (id==i) {
+                alert('找不到未選字！');
+                break;
+            }
+            else if (el.className=='未選字') {
+                el.focus();
+                break;
+            }
+        }
+        ret = false;
+    }
+    // 移向前或後一個相同字
+    else if ( evt.keyCode==90 || evt.keyCode==67) { // Z, C
+        var i = getCharId(el), id = i, el=getChar(id), char = el.getAttribute('char');
+        var move = (evt.keyCode==90) ? getPrevCharId : getNextCharId;
+        while (true) {
+            id = move(id); el = getChar(id);
+            if (id==i) {
+                alert('找不到相同字！');
+                break;
+            }
+            else if (el.getAttribute('char')==char) {
+                el.focus();
+                break;
+            }
+        }
+        ret = false;
+    }
+    // 改變選字
+    else if ( evt.keyCode==83 || evt.keyCode==87) { // S, W
+        var char = el.getAttribute('char');
+        var cur = el.getAttribute('cur');
+        var candlist = list[char];
+        if (evt.keyCode==83) ++cur;
+        else --cur;
+        if (cur>=candlist.length) cur = 0;
+        else if (cur<0) cur = candlist.length-1;
+        setCandidate(el,cur);
+        ret = false;
+    }
+    // 選數字
+    else if ( (evt.keyCode>=49 && evt.keyCode<=57) ) { // 1-9
+        setCandidate(el,evt.keyCode-49);
+        ret = false;
+    }
+    // 選原字
+    else if ( evt.keyCode==48 ) { // 0
+        setCandidate(el,-1,el.getAttribute('char'));
+        ret = false;
+    }
+    // 套用選字
+    else if (evt.keyCode==45||evt.keyCode==13) { // ins, enter
+        var char = el.getAttribute('char');
+        var cur = el.getAttribute('cur');
+        var alt = el.innerHTML;
+        // 更新同選項之選字
+        // enter: 改全部
+        // ins: 只改後面
+        if (el.className == '未選字') el.className = '選定字';
+        var i = (evt.keyCode==13) ? 0 : getCharId(el)+1;
+        for(;i<multiIdx;++i){
+            el = getChar(i);
+            if (el.getAttribute('char')==char) {
+                setCandidate(el,cur,alt);
+            }
+        }
+        ret = false;
+    }
+    // 刪去選字
+    else if (evt.keyCode==46) { // del
+        var char = el.getAttribute('char');
+        var cur = el.getAttribute('cur');
+        var candlist = list[char];
+        if (cur==-1) {
+            alert('目前項目為自訂內容，無法刪除！');
+        }
+        else if (candlist.length<=1) {
+            alert('此為唯一選項，無法刪除！');
+        }
+        else if (confirm('確認要從轉換表中刪除可選字「'+candlist[cur]+'」？')) {
+            // 備份並刪除選項
+            if (!_list[char]) _list[char] = candlist.concat();
+            candlist.splice(cur,1);
+            // 更新選字視窗
+            closePopup(el);
+            openPopup(el);
+            // 更新所有同選項之選字
+            for(i=0;i<multiIdx;++i){
+                el = getChar(i);
+                if (el.getAttribute('char')==char) {
+                    if (el.getAttribute('cur')==cur || candlist.length==1) {
+                        setCandidate(el,Math.max(cur-1,0));
+                    }
+                }
+            }
+        }
+        ret = false;
+    }
+    // 關閉對話框
+    else if (evt.keyCode==27) { // esc
+        closePopup(el);
+        ret = false;
+    }
+    //evt.stopPropagation();
+    return ret;
+}
+
+function markFocus(el){
+    closePopup(el);
+    openPopup(el);
+}
+
+function markBlur(el){
+    if ( el.className == '未選字' ) {
+        el.className = '已審字';
+    }
+    closePopup(el);
+}
+
+function confirmResult() {
+    if (stat == 'working') return;
+    stat = 'working';
+    var str = $('viewer').innerHTML;
+    str = str.replace(/<.*?>/g,'');
+    str = '<pre id="viewer" contenteditable="true">' + str + '</pre>';
+    $('view').innerHTML = str;
+    stat = 'ready';
+}
+
+function resetList() {
+    for (var i in _list) {
+        list[i] = _list[i].concat();
+    }
+    _list = {};
+    if(multiIdx>0){
+        for(var i=0;i<multiIdx;++i){
+            var el = getChar(i);
+            if (!el) continue;
+            if (el.className=='唯一字' && list[el.getAttribute('char')].length>1) {
+                el.className='選定字';
+            }
+        }
+    }
+}
+
+function switchHelper(el) {
+    var h = $('helper');
+    if (h.style.display) {
+        h.style.display = '';
+        el.value = '隱藏說明';
+    }
+    else {
+        h.style.display = 'none';
+        el.value = '顯示說明';
+    }
+}
+
+/**
+ * 輔助函數
+ */
+String.prototype.escapeHTML = function() {
+    return this.replace(/&/mg,"&amp;").replace(/</mg,"&lt;").replace(/>/mg,"&gt;");
+};
+
+// document.getElementById 之快捷函數
+function $(e) { return document.getElementById(e); }
+
+function debug(s) { $('debug').innerHTML+=s+'<br/>'; }
+
+function copyObject(obj) {
+    var nobj = {};
+    for (var i in obj) {
+        nobj[i] = obj[i];
+    }
+    return nobj;
+}
+
+function selectText(el) {
+    // Firefox and Opera, Chrome, Safari; Some older browsers
+    var s = window.getSelection ? window.getSelection() : 
+        (document.getSelection ? document.getSelection() : null);
+    if (s) {
+        var r = document.createRange();
+        r.selectNodeContents(el);
+        s.removeAllRanges();
+        s.addRange(r);
+    }
+    // IE
+    else if (document.selection) {
+        var r = document.body.createTextRange();
+        r.moveToElementText(el);
+        r.select();
+    }
+    return el;
+}
+
+function showProgressBar() {
+    $('progress').style.display = 'block';
+}
+
+function updateProgressBar(value, total) {
+    $('progressbar').style.width = (100 * value / total) + "%";
+}
+
+function hideProgressBar() {
+    $('progress').style.display = 'none';
+}
+
+function getCharId(el) {
+    return parseInt(el.id.substr(4));
+}
+
+function getNextCharId(id) {
+    return (id==multiIdx-1) ? 0 : id+1;
+}
+
+function getPrevCharId(id) {
+    return (id==0) ? multiIdx-1 : id-1;
+}
+
+function getChar(id) {
+    return $("char"+id);
+}
+
+
+function setCandidate(el,index,alt) {
+    //debug(alt);
+    el.setAttribute('cur',index);
+    var candlist = list[el.getAttribute('char')];
+    if (index==-1) {
+        el.innerHTML = alt;
+        el.className = "選定字";
+    }
+    else {
+        if (index>=candlist.length||index<0) return;
+        el.innerHTML = list[el.getAttribute('char')][index];
+        if (candlist.length==1) el.className = "唯一字";
+        else el.className = "選定字";
+    }
+}
+
+function openPopup(el) {
+    var pid = 'pop_' + el.id;
+//    if ($(pid)) return;
+    // 設定內容
+    var cand = [];
+    var cands = list[el.getAttribute('char')];
+    for (var i=0,I=cands.length;i<I;++i) {
+        cand.push((i+1)+'.'+cands[i]);
+    }
+    var out = '<strong>'+el.getAttribute('char')+'</strong> ' + cand.join(' ');
+    // 輸出
+    var parent = el.parentNode;
+    var popup = document.createElement('DIV');
+    var subpopup = document.createElement('SPAN');
+    subpopup.innerHTML = out;
+    popup.appendChild(subpopup);
+    popup.id = pid;
+    popup.className = 'popup';
+    popup.style.top = ( getOffsetY(el) ) + 'px';
+    parent.appendChild(popup);
+    var x = getOffsetX(el);
+    if ( x+subpopup.scrollWidth < parent.scrollWidth ) popup.style.left = x + 'px';
+    else popup.style.right = '0px';
+}
+
+function hasPopup(el) {
+    return $('pop_' + el.id) ? true : false;
+}
+
+function closePopup(el) {
+    var popup = $('pop_' + el.id);
+    if (popup) {
+        popup.parentNode.removeChild(popup);
+    }
+}
+
+function getOffsetX(field) {
+    var offset = 0;
+    while (field) {
+        offset += field.offsetLeft;
+        field = field.offsetParent;
+    }
+    return offset;
+}
+
+function getOffsetY(field) {
+    var offset = 0;
+    while (field) {
+        offset += field.offsetTop;
+        field = field.offsetParent;
+    }
+    return offset;
+}
+//-->
+</script>
+<style type="text/css">
+li {
+    line-height: 1.5em;
+}
+
+pre {
+    white-space: pre-wrap;       /* css-3 */
+    white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+    white-space: -pre-wrap;      /* Opera 4-6 */
+    white-space: -o-pre-wrap;    /* Opera 7 */
+    word-wrap: break-word;       /* Internet Explorer 5.5+ */
+}
+
+#view {
+    background-color: #f8f8ee;
+    border: thin ridge #0066CC;
+    padding: 0.5em;
+}
+
+#viewer {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+.popup {
+    background-color: #eeeeee;
+    border: solid 2px #888;
+    position: absolute;
+    margin: 1.5em 0.5em 0.5em 0.5em;
+    padding: 0.2em;
+    z-Index: 1;
+    max-width: 50%;
+}
+
+#progress {
+    z-index: 100;
+    left: 25%;
+    width: 50%;
+    line-height: 2em;
+    border: 3px solid #AAAAFF;
+    background-color: #EEEEFF;
+    vertical-align: middle;
+    padding: 5px;
+    position: fixed;
+    top: 10%;
+    _position: absolute; /* position fixed for IE6 */
+    _top: expression(documentElement.scrollTop+(documentElement.clientHeight-this.clientHeight)*0.10);
+}
+
+#progresstext {
+    text-align: center;
+}
+
+#progressbar {
+    border: 1px solid black;
+    background-color: #316AC5;
+    width: 0;
+    height: 20px;
+}
+
+b {
+    font-weight:normal;
+}
+
+b:focus {
+    border: solid 2px red;
+    margin: 0px;
+    /*text-decoration: blink;*/
+}
+
+.未選字 {
+    background-color: #FFFF99;
+}
+
+.選定字 {
+    background-color: #CCFFCC;
+}
+
+.已審字 {
+    background-color: #CCFFFF;
+}
+
+.未選字, .選定字, .已審字 {
+    border-bottom: dotted 1px #CC3399;
+    margin: 2px 2px 1px 2px;
+}
+
+.唯一字 {
+    background-color: #DDDDFF;
+    margin: 2px;
+}
+
+.編輯中 {
+    background-color: #FFDDDD;
+    margin: 2px;
+}
+
+.上色字 {
+    background-color: #FFFF99;
+    margin: 2px;
+}
+</style>
+</head>
+
+<body onload="init();">
+<div id="debug"></div>
+<div id="progress" style="display:none;"><div id="progresstext">處理中，請稍候…</div><div id="progressbar"></div></div>
+<div id="view" style="display:none;"></div>
+<form action="javascript:" onsubmit="convert();">
+    <p>
+        <select id="method" size="1">
+            <option value="0">簡->繁</option>
+            <option value="1">繁->簡</option>
+        </select>
+        <select id="mode" size="1">
+            <option value="0">校對模式(含單選)</option>
+            <option value="1" selected="selected">校對模式</option>
+            <option value="2">純文字模式(含單選)</option>
+            <option value="3">純文字模式</option>
+        </select>
+        <select id="outmode" size="1">
+            <option value="0">格式化輸出</option>
+            <option value="1">純文字輸出</option>
+        </select>
+    </p>
+    <p>
+        <textarea id="input" cols="60" rows="10"></textarea>
+    </p>
+    <p>
+        <input type="submit" value="轉換" />
+        <input type="button" value="完成" onclick="confirmResult()" />
+        <input type="button" value="重設轉換表" onclick="resetList()" />
+        <input type="button" value="顯示說明" onclick="switchHelper(this)" />
+    </p>
+</form>
+<div id="helper" style="display:none;">
+<hr/>
+    <h2>操作說明</h2>
+    <p>在輸入區貼上欲轉換的簡化字文本，點擊 [轉換]，此時初步轉換的文本將顯示於藍框内的校對區，可用操作鍵進行校對處理，完成後點擊 [完成] 移除特殊格式（或直接複製亦可）。</p>
+
+    <h2>操作鍵</h2>
+    <ul>
+        <li>Tab／Shift+Tab：移向下／上一個欄位</li>
+        <li>D／A：移向下／上一個待校字</li>
+        <li>E／Q：移向下／上一個未選字</li>
+        <li>C／Z：移向下／上一個相同字</li>
+        <li>S／W：套用下／上一個選字</li>
+        <li>1-9：套用對應的選字</li>
+        <li>0：套用原始字</li>
+        <li>Ins：向後套用（將目前選字套用至後面所有相同待校字者）</li>
+        <li>Enter：全部套用（將目前選字套用至全文所有相同待校字者）</li>
+        <li>Del：刪除選項（將目前選字從轉換表中移除，並更新全文所有用到相同選字者。點擊 [重設轉換表] 回復）</li>
+        <li>`(1左邊的反引號)：將此欄位切換為可編輯或不可編輯，可編輯模式下所有本鍵以外的操作鍵將無效</li>
+    </ul>
+
+    <h2>補充</h2>
+    <ul>
+        <li>本程式以 javascript 寫成，完全在本機端執行，不佔用任何網路頻寬，亦可儲存頁面至本機使用。但 javascript 處理能力有限，請不要一次處理太多文字，以免處理器無法負荷。</li>
+        <li>本程式發布時已在大多數瀏覽器測試過，皆能正常執行。建議使用 javascript 執行較快的瀏覽器，如 Chrome，以取得較佳之效率。</li>
+        <li>本程式只能處理純文字或如 HTML, XML 等標記語言文件之原始碼。若要處理有特殊格式者（如 Word、Excel 等），可先將檔案匯出為 XML 或 HTML，用本程式轉換原始碼後再轉回原格式。</li>
+        <li>欲下載本程式至本機使用者，請用右鍵另存以下連結，放至同一資料夾中： <a href="">sts.html</a>, <a href="s2t.js">s2t.js</a>, <a href="s2tp.js">s2tp.js</a>, <a href="t2s.js">t2s.js</a>,<a href="t2sp.js">t2sp.js</a>
+        </li>
+    </ul>
+</div>
+</body>
+</html>
