@@ -106,7 +106,7 @@ function convert(){
                 }
             }
             output.push(s);
-            updateProgressBar(['文本轉換中... ', parseInt(100*i/I), '%'].join(''), (100*i/I));
+            updateProgressBar(['文本轉換中 (', parseInt(100*i/I), '%)...'].join(''), (100*i/I));
             ++i;
             if (new Date()-t>500) {
                 var k = setTimeout(arguments.callee,0);
