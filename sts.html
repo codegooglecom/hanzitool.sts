@@ -96,8 +96,9 @@ function convert(){
     (function(){
         var t = new Date();
         while (i<I) {
+            s = str.substr(i, listMaxLen);
             for (j=listMaxLen;j>=1;--j) {
-                s = str.substr(i, j);
+                s = s.substr(0, j);
                 if (list[s]) {
                     conv();
                     i += j-1;
