@@ -236,7 +236,7 @@ function choose(evt,el){
     else if ( evt.keyCode==83 || evt.keyCode==87) { // S, W
         var char = el.getAttribute('char');
         var cur = el.getAttribute('cur');
-        var candlist = list[char];
+        var candlist = getCandidates(char);
         if (evt.keyCode==83) ++cur;
         else --cur;
         if (cur>=candlist.length) cur = 0;
@@ -286,17 +286,21 @@ function choose(evt,el){
     else if (evt.keyCode==46) { // del
         var char = el.getAttribute('char');
         var cur = el.getAttribute('cur');
-        var candlist = list[char];
+        var candlist = getCandidates(char);
         if (cur==-1) {
-            alert('目前項目為自訂內容，無法刪除！');
+            alert('此為原始內容，無法刪除！');
         }
         else if (candlist.length<=1) {
             alert('此為唯一選項，無法刪除！');
         }
+        else if (cur==candlist.length-1) {
+            alert('此為綜合項，無法刪除！');
+        }
         else if (confirm('確認要從轉換表中刪除可選字「'+candlist[cur]+'」？')) {
             // 備份並刪除選項
-            if (!_list[char]) _list[char] = candlist.concat();
-            candlist.splice(cur,1);
+            if (!_list[char]) _list[char] = list[char].concat();
+            list[char].splice(cur,1);
+            candlist = getCandidates(char);
             // 更新選字視窗
             closePopup(el);
             openPopup(el);
@@ -438,10 +442,17 @@ function getChar(id) {
     return $("char"+id);
 }
 
+function getCandidates(char) {
+    var candidates = list[char];
+    if (candidates.length>1)
+        candidates = candidates.concat(['{{'+char+'->'+candidates.join('|')+'}}']);
+    return candidates;
+}
+
 function setCandidate(el,index,alt) {
     //debug(alt);
     el.setAttribute('cur',index);
-    var candlist = list[el.getAttribute('char')];
+    var candlist = getCandidates(el.getAttribute('char'));
     if (index==-1) {
         el.innerHTML = alt;
         el.className = "選定字";
@@ -458,7 +469,7 @@ function openPopup(el) {
     var pid = 'pop_' + el.id;
     // 設定內容
     var cand = [];
-    var candlist = list[el.getAttribute('char')];
+    var candlist = getCandidates(el.getAttribute('char'));
     for (var i=0,I=candlist.length;i<I;++i) {
         cand.push((i+1)+'.'+candlist[i]);
     }
