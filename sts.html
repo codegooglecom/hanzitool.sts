@@ -439,7 +439,7 @@ function setCandidate(el,index,alt) {
     }
     else {
         if (index>=candlist.length||index<0) return;
-        el.innerHTML = list[el.getAttribute('char')][index];
+        el.innerHTML = candlist[index];
         if (candlist.length==1) el.className = "唯一字";
         else el.className = "選定字";
     }
@@ -449,9 +449,9 @@ function openPopup(el) {
     var pid = 'pop_' + el.id;
     // 設定內容
     var cand = [];
-    var cands = list[el.getAttribute('char')];
-    for (var i=0,I=cands.length;i<I;++i) {
-        cand.push((i+1)+'.'+cands[i]);
+    var candlist = list[el.getAttribute('char')];
+    for (var i=0,I=candlist.length;i<I;++i) {
+        cand.push((i+1)+'.'+candlist[i]);
     }
     var out = '<strong>'+el.getAttribute('char')+'</strong> ' + cand.join(' ');
     // 輸出
