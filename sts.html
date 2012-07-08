@@ -164,7 +164,6 @@ function choose(evt,el){
     //debug(evt.keyCode);
     var ret = true;
     // 設為可編輯
-    // Windows 上之 Safari 設定後無法輸入中文
     if (evt.keyCode==192) { // `
         if ( el.className == '編輯中' ) {
             el.contentEditable = false;
