@@ -250,8 +250,18 @@ function choose(evt,el){
         setCandidate(el,evt.keyCode-49);
         ret = false;
     }
+    // 選數字 (數字區)
+    else if ( (evt.keyCode>=97 && evt.keyCode<=105) ) { // 1-9 (NumLock on)
+        setCandidate(el,evt.keyCode-97);
+        ret = false;
+    }
     // 選原字
     else if ( evt.keyCode==48 ) { // 0
+        setCandidate(el,-1,el.getAttribute('char'));
+        ret = false;
+    }
+    // 選原字 (數字區)
+    else if ( evt.keyCode==96 ) { // 0 (NumLock on)
         setCandidate(el,-1,el.getAttribute('char'));
         ret = false;
     }
